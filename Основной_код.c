@@ -308,8 +308,7 @@ int main() {
 
     perona_malik(picture, width, hight, dt, K, N);
 
-    // Cþäà íóæíî âñòàâèòü ññûëêó íà ïðîìåæóòî÷íûé png'øíûé ôàéë, ãäå óæå áóäåò âûäåëåíèå ÷åðíî-áåëûì
-    lodepng_encode32_file("output_1.png", picture, width, hight);
+
 
     colorComponents(picture, width, hight, 5);
 
