@@ -33,6 +33,10 @@ struct Node {
 };
 typedef struct Node Node;
 
+typedef struct {
+    int x, y;
+} Point;
+
 
 void applyFilter(unsigned char *image, int width, int height) {
     unsigned char *result = malloc(width * height * 4 * sizeof(unsigned char));
@@ -136,7 +140,7 @@ void color_components(Node* nodes, int width, int height) {
 
         component_sizes[par - nodes]++;
     }
-    // Cþäà íóæíî âñòàâèòü ññûëêó íà png'øíûé ôàéë, ãäå áóäåò îòâåò
+    // CÃ¾Ã¤Ã  Ã­Ã³Ã¦Ã­Ã® Ã¢Ã±Ã²Ã Ã¢Ã¨Ã²Ã¼ Ã±Ã±Ã»Ã«ÃªÃ³ Ã­Ã  png'Ã¸Ã­Ã»Ã© Ã´Ã Ã©Ã«, Ã£Ã¤Ã¥ Ã¡Ã³Ã¤Ã¥Ã² Ã®Ã²Ã¢Ã¥Ã²
     char* output_filename = "output_2.png";
 
     lodepng_encode32_file(output_filename, output_image, width, height);
@@ -231,12 +235,70 @@ void applySobelFilter(unsigned char *image, int width, int height) {
 }
 
 
+void floodFill(unsigned char* image, int x, int y, int newColor1, int newColor2, int newColor3, int oldColor, int width, int height) {
+    int dx[] = {-1, 0, 1, 0};
+    int dy[] = {0, 1, 0, -1};
+
+    Point* stack = malloc(width * height * 4 * sizeof(Point));
+    long top = 0;
+
+    stack[top++] = (Point){x, y};
+
+    while(top > 0) {
+        Point p = stack[--top];
+
+        if(p.x < 0 || p.x >= width || p.y < 0 || p.y >= height)
+            continue;
+
+        int resultIndex = (p.y * width + p.x) * 4;
+        if(image[resultIndex] > oldColor)
+            continue;
+
+        image[resultIndex] = newColor1;
+        image[resultIndex + 1] = newColor2;
+        image[resultIndex + 2] = newColor3;
+
+
+        for(int i = 0; i < 4; i++) {
+            int nx = p.x + dx[i];
+            int ny = p.y + dy[i];
+            int nIndex = (ny * width + nx) * 4;
+            if(nx > 0 && nx < width && ny > 0 && ny < height && image[nIndex] <= oldColor) {
+                stack[top++] = (Point){nx, ny};
+            }
+        }
+    }
+    free(stack);
+}
+
+void colorComponents(unsigned char* image, int width, int height, int epsilon) {
+    int color1 = epsilon * 2;
+    int color2 = epsilon * 2;
+    int color3 = epsilon * 2;
+    int cnt = 0;
+    for(int y = 1; y < height - 1; y++) {
+        for(int x = 1; x < width - 1; x++) {
+            if(image[4 * (y * width + x)] < epsilon) {
+                cnt++;
+                floodFill(image, x, y, color1, color2, color3, epsilon, width, height);
+
+            }
+            color1 = rand() % (255 - epsilon * 2) + epsilon * 2;
+            color2 = rand() % (255 - epsilon * 2) + epsilon * 2;
+            color3 = rand() % (255 - epsilon * 2) + epsilon * 2;
+        }
+    }
+    char *output_filename = "output3.png";
+    lodepng_encode32_file(output_filename, image, width, height);
+    printf("%d", cnt);
+}
+
 
 int main() {
     int width = 0, hight = 0, N = 200;
     float dt = 0.15, K = 1.0;
 
-    // Cþäà íóæíî âñòàâèòü ññûëêó íà èçíà÷àëüíûé png'øíûé ôàéë
+    // CÃ¾Ã¤Ã  Ã­Ã³Ã¦Ã­Ã® Ã¢Ã±Ã²Ã Ã¢Ã¨Ã²Ã¼ Ã±Ã±Ã»Ã«ÃªÃ³ Ã­Ã  Ã¨Ã§Ã­Ã Ã·Ã Ã«Ã¼Ã­Ã»Ã© png'Ã¸Ã­Ã»Ã© Ã´Ã Ã©Ã«
     char *filename = "input.png";
 
     char *picture = load_png_file(filename, &width, &hight);
@@ -246,54 +308,13 @@ int main() {
 
     perona_malik(picture, width, hight, dt, K, N);
 
-    // Cþäà íóæíî âñòàâèòü ññûëêó íà ïðîìåæóòî÷íûé png'øíûé ôàéë, ãäå óæå áóäåò âûäåëåíèå ÷åðíî-áåëûì
+    // CÃ¾Ã¤Ã  Ã­Ã³Ã¦Ã­Ã® Ã¢Ã±Ã²Ã Ã¢Ã¨Ã²Ã¼ Ã±Ã±Ã»Ã«ÃªÃ³ Ã­Ã  Ã¯Ã°Ã®Ã¬Ã¥Ã¦Ã³Ã²Ã®Ã·Ã­Ã»Ã© png'Ã¸Ã­Ã»Ã© Ã´Ã Ã©Ã«, Ã£Ã¤Ã¥ Ã³Ã¦Ã¥ Ã¡Ã³Ã¤Ã¥Ã² Ã¢Ã»Ã¤Ã¥Ã«Ã¥Ã­Ã¨Ã¥ Ã·Ã¥Ã°Ã­Ã®-Ã¡Ã¥Ã«Ã»Ã¬
     lodepng_encode32_file("output_1.png", picture, width, hight);
 
+    colorComponents(picture, width, hight, 5);
 
 
-
-
-
-    Node* nodes = malloc(width * hight * sizeof(Node));
-
-    unsigned y = 0, x = 0;
-
-    for (y = 0; y < hight; ++y) {
-        for (x = 0; x < width; ++x) {
-
-            Node* node = &nodes[y * width + x];
-
-            unsigned char* pixel = &picture[(y * width + x) * 4];
-
-            node->RED = pixel[0];
-            node->GREEN = pixel[1];
-            node->BLUE = pixel[2];
-            node->WHITE = pixel[3];
-
-            if (y > 0) node->up = &nodes[(y - 1) * width + x];
-            else node->up = NULL;
-
-            if (y < hight - 1 ) node->down = &nodes[(y + 1) * width + x];
-            else node->down = NULL;
-
-            if (x > 0) node->left = &nodes[y * width + (x - 1)];
-            else node->left = NULL;
-
-            if (x < width - 1) node->right = &nodes[y * width + (x + 1)];
-            else node->right = NULL;
-
-            node->parent = node;
-
-            node->rank = 0;
-        }
-    }
-
-    find_set(nodes, width, hight);
-    color_components(nodes, width, hight);
-
-    free(nodes);
     free(picture);
 
     return 0;
 }
-
