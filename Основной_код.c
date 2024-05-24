@@ -136,8 +136,8 @@ void color_components(Node* nodes, int width, int height) {
 
         component_sizes[par - nodes]++;
     }
-
-    char* output_filename = "C:\\Users\\user\\OneDrive\\Рабочий стол\\Новая папка\\Голова_output_2.png";
+    // Cюда нужно вставить ссылку на png'шный файл, где будет ответ
+    char* output_filename = "output_2.png";
 
     lodepng_encode32_file(output_filename, output_image, width, height);
 
@@ -236,7 +236,8 @@ int main() {
     int width = 0, hight = 0, N = 200;
     float dt = 0.15, K = 1.0;
 
-    char *filename = "C:\\Users\\user\\OneDrive\\Рабочий стол\\Новая папка\\Голова_input.png";
+    // Cюда нужно вставить ссылку на изначальный png'шный файл
+    char *filename = "input.png";
 
     char *picture = load_png_file(filename, &width, &hight);
 
@@ -245,7 +246,8 @@ int main() {
 
     perona_malik(picture, width, hight, dt, K, N);
 
-    lodepng_encode32_file("C:\\Users\\user\\OneDrive\\Рабочий стол\\Новая папка\\Голова_output_1.png", picture, width, hight);
+    // Cюда нужно вставить ссылку на промежуточный png'шный файл, где уже будет выделение черно-белым
+    lodepng_encode32_file("output_1.png", picture, width, hight);
 
 
 
